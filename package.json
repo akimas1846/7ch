@@ -1,9 +1,11 @@
 {
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
+    "netlify-cli": "^17.38.1",
     "vite": "^6.0.6"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.47.10",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
@@ -11,6 +13,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
+    "serve": "netlify functions:serve",
+    "dev": "vite",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
