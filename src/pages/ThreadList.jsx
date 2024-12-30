@@ -1,4 +1,3 @@
-// ThreadList.js
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../netlify/functions/supabaseClient.mjs";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +9,6 @@ const ThreadList = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Fetch threads
   const fetchThreads = async () => {
     const { data, error } = await supabase
       .from("threads")
@@ -28,11 +26,11 @@ const ThreadList = () => {
     fetchThreads();
   }, []);
 
-  // Add a new thread
   const addThread = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
+      // スレッド作成
       const { data, error } = await supabase
         .from("threads")
         .insert([{ title: threadTitle, description: threadDescription }])
@@ -40,18 +38,33 @@ const ThreadList = () => {
 
       if (error) {
         console.error(error);
-      } else {
-        setThreadTitle("");
-        setThreadDescription("");
-        const newThread = data[0];
-        navigate(`/threads/${newThread.id}`);
+        return;
       }
+
+      // 新しいスレッドIDを取得
+      const newThread = data[0];
+
+      // スレッド作成後にその説明を最初の投稿として追加
+      const { error: postError } = await supabase.from("posts").insert([
+        {
+          content: threadDescription,  // 説明を最初の投稿内容として使用
+          thread_id: newThread.id,
+        },
+      ]);
+
+      if (postError) {
+        console.error("Error adding post:", postError);
+        return;
+      }
+
+      setThreadTitle("");
+      setThreadDescription("");
+      navigate(`/threads/${newThread.id}`);
     } finally {
       setLoading(false);
     }
   };
 
-  // Delete a thread
   const deleteThread = async (threadId) => {
     const confirmDelete = window.confirm(
       "このスレッドを削除してもよろしいですか？この操作は取り消せません。"
@@ -66,7 +79,6 @@ const ThreadList = () => {
       if (error) {
         console.error("Error deleting thread:", error);
       } else {
-        // 削除成功後、スレッドリストを再フェッチ
         fetchThreads();
       }
     } catch (error) {
@@ -76,38 +88,44 @@ const ThreadList = () => {
 
   return (
     <div>
-      <h1>スレッド一覧</h1>
-      {/* スレッド作成フォーム */}
-      <form onSubmit={addThread}>
-        <input
-          type="text"
-          placeholder="スレッドタイトル"
-          value={threadTitle}
-          onChange={(e) => setThreadTitle(e.target.value)}
-          required
-        />
-        <textarea
-          placeholder="スレッドの説明"
-          value={threadDescription}
-          onChange={(e) => setThreadDescription(e.target.value)}
-        ></textarea>
-        <button type="submit" disabled={loading}>
-          {loading ? "作成中..." : "スレッド作成"}
-        </button>
-      </form>
+      {/* 7chのタイトル */}
+      <div className="header">7ch</div>
 
-      {/* スレッド一覧表示 */}
-      <div>
-        {threads.map((thread) => (
-          <div key={thread.id}>
-            <h2>{thread.title}</h2>
-            <p>{thread.description}</p>
-            <button onClick={() => navigate(`/threads/${thread.id}`)}>
-              詳細を見る
+      <div className="container">
+        {/* スレッド一覧 */}
+        <div className="thread-list">
+          <h2>スレッド一覧</h2>
+          {threads.map((thread) => (
+            <div key={thread.id}>
+              <h3>{thread.title}</h3>
+              <p>{thread.description}</p>
+              <button onClick={() => navigate(`/threads/${thread.id}`)}>スレッドに移動</button>
+              <button onClick={() => deleteThread(thread.id)}>スレッドを削除</button>
+            </div>
+          ))}
+        </div>
+
+        {/* スレッド作成フォーム */}
+        <div className="thread-form">
+          <h2>新しいスレッドを作成</h2>
+          <form onSubmit={addThread}>
+            <input
+              type="text"
+              placeholder="スレッドタイトル"
+              value={threadTitle}
+              onChange={(e) => setThreadTitle(e.target.value)}
+              required
+            />
+            <textarea
+              placeholder="スレッドの説明（自動的にここに打ち込んだ文章が最初の投稿になります）"
+              value={threadDescription}
+              onChange={(e) => setThreadDescription(e.target.value)}
+            ></textarea>
+            <button type="submit" disabled={loading}>
+              {loading ? "作成中..." : "スレッド作成"}
             </button>
-            <button onClick={() => deleteThread(thread.id)}>削除</button>
-          </div>
-        ))}
+          </form>
+        </div>
       </div>
     </div>
   );

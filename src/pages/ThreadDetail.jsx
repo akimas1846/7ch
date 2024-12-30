@@ -45,10 +45,14 @@ const ThreadDetail = () => {
           setPosts(postsData);
         }
 
+        // コメントは posts.post_id に基づいて取得
         const { data: commentsData, error: commentsError } = await supabase
           .from("comments")
           .select("*")
-          .eq("thread_id", id); // スレッドIDでコメントを取得
+          .in(
+            "post_id",
+            postsData.map((post) => post.id)
+          ); // postsData の post_id に基づいてコメントを取得
 
         if (commentsError) {
           console.error("Error fetching comments:", commentsError);
@@ -82,7 +86,6 @@ const ThreadDetail = () => {
         console.error("Error adding post:", error);
       } else {
         setNewPostContent(""); // 投稿内容をリセット
-        // 投稿リストの再取得
         const { data: postsData } = await supabase
           .from("posts")
           .select("*")
@@ -104,7 +107,7 @@ const ThreadDetail = () => {
       const { error } = await supabase.from("comments").insert([
         {
           content: newCommentContent,
-          post_id: postId, // ここで postId を渡す
+          post_id: postId,
         },
       ]);
 
@@ -112,11 +115,10 @@ const ThreadDetail = () => {
         console.error("Error adding comment:", error);
       } else {
         setNewCommentContent(""); // コメント内容をリセット
-        // コメントリストの再取得
         const { data: commentsData } = await supabase
           .from("comments")
           .select("*")
-          .eq("post_id", postId); // コメントを投稿IDで取得
+          .eq("post_id", postId);
         setComments(commentsData);
       }
     } catch (error) {
@@ -136,7 +138,6 @@ const ThreadDetail = () => {
       if (error) {
         console.error("Error deleting post:", error);
       } else {
-        // 投稿削除後に再フェッチ
         const { data: postsData } = await supabase
           .from("posts")
           .select("*")
@@ -150,34 +151,26 @@ const ThreadDetail = () => {
 
   return (
     <div>
+      <div className="header">7ch</div>
       {loading ? (
         <p>読み込み中...</p>
       ) : (
-        <div>
-          <h1>{thread ? thread.title : "スレッドが見つかりませんでした"}</h1>
-          <button onClick={() => navigate(-1)}>戻る</button>
-
-          {/* 投稿フォーム */}
-          <form onSubmit={addPost}>
-            <textarea
-              placeholder="新しい投稿..."
-              value={newPostContent}
-              onChange={(e) => setNewPostContent(e.target.value)}
-              required
-            ></textarea>
-            <button type="submit">投稿する</button>
-          </form>
+        <div className="thread-detail-container">
+          <button className="back-button" onClick={() => navigate(-1)}>戻る</button>
+          <h1 className="thread-title">
+            {thread ? thread.title : "スレッドが見つかりませんでした"}
+          </h1>
 
           {/* 投稿一覧表示 */}
-          <div>
+          <div className="post-list">
             {posts.length > 0 ? (
               posts.map((post) => (
-                <div key={post.id}>
+                <div key={post.id} className="post">
                   <p>{post.content}</p>
                   <small>
                     投稿日: {new Date(post.created_at).toLocaleString()}
                   </small>
-                  <button onClick={() => deletePost(post.id)}>削除</button>
+                  <button onClick={() => deletePost(post.id)}>投稿を削除</button>
 
                   {/* コメントフォーム */}
                   <button onClick={() => setSelectedPostId(post.id)}>
@@ -185,14 +178,27 @@ const ThreadDetail = () => {
                   </button>
 
                   {selectedPostId === post.id && (
-                    <form onSubmit={(e) => addComment(e, post.id)}>
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault(); // フォーム送信を無効化
+                        if (!newCommentContent) {
+                          setSelectedPostId(null); // フォームを閉じる
+                        } else {
+                          addComment(e, post.id);
+                        }
+                      }}
+                      className="comment-form"
+                    >
                       <textarea
                         placeholder="コメントを追加..."
                         value={newCommentContent}
                         onChange={(e) => setNewCommentContent(e.target.value)}
-                        required
                       ></textarea>
-                      <button type="submit">コメントする</button>
+                      <button type="submit">
+                        {newCommentContent
+                          ? "コメントを投稿する"
+                          : "投稿をキャンセル"}
+                      </button>
                     </form>
                   )}
 
@@ -213,6 +219,18 @@ const ThreadDetail = () => {
             ) : (
               <p>まだ投稿はありません。</p>
             )}
+          </div>
+
+          {/* 投稿フォーム */}
+          <div className="post-form">
+            <form onSubmit={addPost}>
+              <textarea
+                placeholder="新しい投稿..."
+                value={newPostContent}
+                onChange={(e) => setNewPostContent(e.target.value)}
+              ></textarea>
+              <button type="submit">投稿する</button>
+            </form>
           </div>
         </div>
       )}
