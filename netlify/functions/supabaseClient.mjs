@@ -1,10 +1,11 @@
-// functions/supabaseClient.js
+// src/supabaseClient.mjs
+import { createClient } from '@supabase/supabase-js';
 
-const { createClient } = require('@supabase/supabase-js');
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Supabase URL または Key が設定されていません');
+}
 
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-module.exports = supabase;
+export const supabase = createClient(supabaseUrl, supabaseKey);

@@ -4,6 +4,9 @@ var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __getProtoOf = Object.getPrototypeOf;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __esm = (fn, res) => function __init() {
+  return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
+};
 var __commonJS = (cb, mod) => function __require() {
   return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
 };
@@ -14546,17 +14549,40 @@ var supabaseClient_exports = {};
 __export(supabaseClient_exports, {
   supabase: () => supabase
 });
-module.exports = __toCommonJS(supabaseClient_exports);
-var import_supabase_js = __toESM(require_main5(), 1);
-var import_meta = {};
-var supabaseUrl = "https://eqvfxlawvkjjkxazxngi.supabase.co";
-var supabaseKey = import_meta.env.VITE_SUPABASE_KEY;
-if (!supabaseUrl || !supabaseKey) {
-  console.error("Supabase URL \u307E\u305F\u306F Key \u304C\u8A2D\u5B9A\u3055\u308C\u3066\u3044\u307E\u305B\u3093");
-}
-var supabase = (0, import_supabase_js.createClient)(supabaseUrl, supabaseKey);
-// Annotate the CommonJS export names for ESM import in node:
-0 && (module.exports = {
-  supabase
+var import_supabase_js, import_meta, supabaseUrl, supabaseKey, supabase;
+var init_supabaseClient = __esm({
+  "netlify/functions/supabaseClient.mjs"() {
+    import_supabase_js = __toESM(require_main5(), 1);
+    import_meta = {};
+    supabaseUrl = "https://eqvfxlawvkjjkxazxngi.supabase.co";
+    supabaseKey = import_meta.env.VITE_SUPABASE_KEY;
+    if (!supabaseUrl || !supabaseKey) {
+      console.error("Supabase URL \u307E\u305F\u306F Key \u304C\u8A2D\u5B9A\u3055\u308C\u3066\u3044\u307E\u305B\u3093");
+    }
+    supabase = (0, import_supabase_js.createClient)(supabaseUrl, supabaseKey);
+  }
 });
-//# sourceMappingURL=supabaseClient.js.map
+
+// netlify/functions/fetchPosts.mjs
+var supabase2 = (init_supabaseClient(), __toCommonJS(supabaseClient_exports));
+exports.handler = async () => {
+  try {
+    const { data, error } = await supabase2.from("posts").select("*").order("created_at", { ascending: false });
+    if (error) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ error: error.message })
+      };
+    }
+    return {
+      statusCode: 200,
+      body: JSON.stringify(data)
+    };
+  } catch (err) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: err.message })
+    };
+  }
+};
+//# sourceMappingURL=fetchPosts.js.map

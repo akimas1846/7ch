@@ -1,0 +1,67 @@
+/* App.css */
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .header {
+    text-align: center;
+  }
+  
+  .form {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+  }
+  
+  .input {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .textarea {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    height: 100px;
+  }
+  
+  .button {
+    padding: 10px;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .postsContainer {
+    margin-top: 20px;
+  }
+  
+  .postCard {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .postTitle {
+    margin: 0 0 10px 0;
+  }
+  
+  .postContent {
+    margin: 0 0 10px 0;
+  }
+  
+  .postDate {
+    font-size: 0.8em;
+    color: #666;
+  }
+  
