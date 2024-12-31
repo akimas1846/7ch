@@ -172,15 +172,16 @@ button:hover {
   margin-bottom: 20px;
 }
 .back-button {
-  position: absolute;
-  top: 80px;
-  left: 300px;
+  position: fixed; /* ウィンドウに対して固定 */
+  top: 60px; /* 上からの距離 */
+  left: 100px; /* 左からの距離 */
   background-color: #4caf50;
   color: white;
   padding: 10px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+  z-index: 1000; /* 他の要素よりも前面に表示 */
 }
 
 .back-button:hover {
@@ -197,7 +198,9 @@ button:hover {
   margin-top: 20px; /* 上部のマージンを調整 */
 }
 
-.thread-list button, .post button, .comment-form button {
+.thread-list button,
+.post button,
+.comment-form button {
   display: inline-block;
   margin-right: 10px; /* 横並びの場合の間隔 */
 }
