@@ -13,6 +13,10 @@ const ThreadDetail = () => {
   const [newCommentContent, setNewCommentContent] = useState("");
   const [selectedPostId, setSelectedPostId] = useState(null);
 
+  // ページ設定
+  const postsPerPage = 5; // 1ページに表示する投稿数
+  const [currentPage, setCurrentPage] = useState(1);
+
   // スレッド、投稿、コメントをフェッチ
   useEffect(() => {
     const fetchThread = async () => {
@@ -37,7 +41,11 @@ const ThreadDetail = () => {
         const { data: postsData, error: postsError } = await supabase
           .from("posts")
           .select("*")
-          .eq("thread_id", id);
+          .eq("thread_id", id)
+          .range(
+            (currentPage - 1) * postsPerPage,
+            currentPage * postsPerPage - 1
+          ); // ページごとに投稿を取得
 
         if (postsError) {
           console.error("Error fetching posts:", postsError);
@@ -67,7 +75,45 @@ const ThreadDetail = () => {
     };
 
     fetchThread();
+  }, [id, currentPage]);
+
+  // 投稿数を取得してページ数を計算
+  const [totalPosts, setTotalPosts] = useState(0);
+  useEffect(() => {
+    const fetchTotalPosts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("posts")
+          .select("id", { count: "exact" })
+          .eq("thread_id", id);
+
+        if (error) {
+          console.error("Error fetching total posts:", error);
+        } else {
+          setTotalPosts(data.length); // 総投稿数を更新
+        }
+      } catch (error) {
+        console.error("Error fetching total posts:", error);
+      }
+    };
+
+    fetchTotalPosts();
   }, [id]);
+
+  // ページ遷移を制御
+  const totalPages = Math.ceil(totalPosts / postsPerPage);
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   // 新しい投稿を追加する
   const addPost = async (e) => {
@@ -86,6 +132,7 @@ const ThreadDetail = () => {
         console.error("Error adding post:", error);
       } else {
         setNewPostContent(""); // 投稿内容をリセット
+        window.location.reload();
         const { data: postsData } = await supabase
           .from("posts")
           .select("*")
@@ -114,12 +161,14 @@ const ThreadDetail = () => {
       if (error) {
         console.error("Error adding comment:", error);
       } else {
-        setNewCommentContent(""); // コメント内容をリセット
+        window.location.reload();
+        // setNewCommentContent(""); // コメント内容をリセット
         const { data: commentsData } = await supabase
           .from("comments")
           .select("*")
           .eq("post_id", postId);
         setComments(commentsData);
+
       }
     } catch (error) {
       console.error("Unexpected error adding comment:", error);
@@ -156,7 +205,9 @@ const ThreadDetail = () => {
         <p>読み込み中...</p>
       ) : (
         <div className="thread-detail-container">
-          <button className="back-button" onClick={() => navigate(-1)}>戻る</button>
+          <button className="back-button" onClick={() => navigate(-1)}>
+            戻る
+          </button>
           <h1 className="thread-title">
             {thread ? thread.title : "スレッドが見つかりませんでした"}
           </h1>
@@ -170,7 +221,9 @@ const ThreadDetail = () => {
                   <small>
                     投稿日: {new Date(post.created_at).toLocaleString()}
                   </small>
-                  <button onClick={() => deletePost(post.id)}>投稿を削除</button>
+                  <button onClick={() => deletePost(post.id)}>
+                    投稿を削除
+                  </button>
 
                   {/* コメントフォーム */}
                   <button onClick={() => setSelectedPostId(post.id)}>
@@ -219,6 +272,22 @@ const ThreadDetail = () => {
             ) : (
               <p>まだ投稿はありません。</p>
             )}
+          </div>
+
+          {/* ページ遷移ボタン */}
+          <div className="pagination">
+            <button onClick={goToPreviousPage} disabled={currentPage === 1}>
+              前へ
+            </button>
+            <span>
+              ページ {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={goToNextPage}
+              disabled={currentPage === totalPages}
+            >
+              次へ
+            </button>
           </div>
 
           {/* 投稿フォーム */}

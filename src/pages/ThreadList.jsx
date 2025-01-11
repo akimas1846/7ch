@@ -7,13 +7,21 @@ const ThreadList = () => {
   const [threadTitle, setThreadTitle] = useState("");
   const [threadDescription, setThreadDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1); // 現在のページ
+  const [threadsPerPage, setThreadsPerPage] = useState(5); // 1ページあたりのスレッド数
+  const [totalThreads, setTotalThreads] = useState(0); // 総スレッド数
   const navigate = useNavigate();
 
+  // スレッドのデータを取得する
   const fetchThreads = async () => {
+    const start = (currentPage - 1) * threadsPerPage;
+    const end = start + threadsPerPage - 1;
+
     const { data, error } = await supabase
       .from("threads")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(start, end);  // ページに基づいてレコードの範囲を指定
 
     if (error) {
       console.error("Error fetching threads:", error);
@@ -22,9 +30,23 @@ const ThreadList = () => {
     }
   };
 
+  // 総スレッド数を取得する
+  const fetchTotalThreads = async () => {
+    const { count, error } = await supabase
+      .from("threads")
+      .select("id", { count: "exact" });
+
+    if (error) {
+      console.error("Error fetching total threads:", error);
+    } else {
+      setTotalThreads(count); // 総スレッド数を設定
+    }
+  };
+
   useEffect(() => {
     fetchThreads();
-  }, []);
+    fetchTotalThreads();
+  }, [currentPage]); // ページが変更されたときにデータを再フェッチ
 
   const addThread = async (e) => {
     e.preventDefault();
@@ -86,6 +108,9 @@ const ThreadList = () => {
     }
   };
 
+  // 総スレッド数を基にページ数を計算
+  const totalPages = Math.ceil(totalThreads / threadsPerPage);
+
   return (
     <div>
       {/* 7chのタイトル */}
@@ -103,6 +128,23 @@ const ThreadList = () => {
               <button onClick={() => deleteThread(thread.id)}>スレッドを削除</button>
             </div>
           ))}
+        </div>
+
+        {/* ページネーション */}
+        <div className="pagination">
+          <button
+            onClick={() => setCurrentPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            前へ
+          </button>
+          <span>ページ {currentPage} / {totalPages}</span>
+          <button
+            onClick={() => setCurrentPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            次へ
+          </button>
         </div>
 
         {/* スレッド作成フォーム */}
